@@ -1,3 +1,4 @@
+import java.sql.Array;
 import java.util.ArrayList;
 
 public class Main {
@@ -9,6 +10,7 @@ public class Main {
         for (String fileName: modelNames){
             models.add(new Model(fileName));
         }
+        ArrayList<Model> newModels = driver.performActionsList(models);
 
 //        Model newModel = new Model(models.get(0));
 //        Model newModel2 = new Model(models.get(0));
@@ -27,14 +29,10 @@ public class Main {
 //        System.out.println(models.get(0).num);
 //        System.out.println(newModel.num);
 //        System.out.println(newModel2.num);
-//        driver.makeDir();
-//        for (int j = 0; j < driver.driverLines.size(); j++) {
-//            for (int i = 0; i < models.size(); i++){
-//                if (driver.driverLines.get(j).target.equals(models.get(i).fileName)){
-//                    models.get(i).writeFile(driver.fileName);
-//                }
-//            }
-//        }
+        driver.makeDir();
+        for (int i = 0; i < newModels.size(); i++){
+            newModels.get(i).writeFile(driver.fileName);
+        }
 
         //rotate, scale, translate
     }

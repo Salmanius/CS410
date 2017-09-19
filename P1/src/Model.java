@@ -66,6 +66,7 @@ public class Model {
             writer.write(line);
             writer.newLine();
         }
+        writer.write(bottomComment);
         for (Vert v: vertices) {
             writer.write("v " + v.x + " " + v.y + " " + v.z);
             writer.newLine();
@@ -74,7 +75,6 @@ public class Model {
             writer.write("f " + faces.get(0).raw);
             writer.newLine();
         }
-        writer.write(bottomComment);
         writer.close();
     }
 
