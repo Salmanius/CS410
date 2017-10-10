@@ -2,26 +2,26 @@ import java.util.Arrays;
 
 public class Face {
     String raw;
-
+    int point1 = 1;
+    int point2 = 1;
+    int point3 = 1;
 
     public Face(String raw){
         this.raw = raw;
+        parse();
     }
 
     public Face(Face copy){
         this.raw = copy.raw;
     }
 
-    float getV(){ //BAD CODE, NEEDS TRUE PARSING LATER
-        String[] rawSplit = raw.split("//");
-        return (Float.parseFloat(rawSplit[0]));
+    void parse(){ //BAD CODE, NEEDS TRUE PARSING LATER
+        String[] spaceSplit = raw.split(" ");
+        String[] point1Raw = spaceSplit[0].split("//");
+        point1 = Integer.parseInt(point1Raw[0]);
+        String[] point2Raw = spaceSplit[1].split("//");
+        point2 = Integer.parseInt(point2Raw[0]);
+        String[] point3Raw = spaceSplit[2].split("//");
+        point3 = Integer.parseInt(point3Raw[0]);
     }
 }
-
-//    String test1 = "1 2 3";
-//    String test2 = "1//2 2//2 3//3";
-//    String test3 = "1/3/3 2/3/3 3/3/3";
-//
-//    String[] testSplit = test1.split(" |/");
-//
-//    System.out.println(Arrays.toString(testSplit));
