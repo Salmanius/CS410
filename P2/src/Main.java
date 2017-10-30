@@ -8,12 +8,10 @@ public class Main {
         driver.parse();
         driver.getModelNames();
         driver.readModels();
-
-
-        driver.makeDir();
+        
+        driver.initializePPM(ppmFileName);
         driver.shootRays();
-        PPM ppm = new PPM(ppmFileName,(int)driver.resX,(int)driver.resY);
-        ppm.writeFile();
+        driver.ppm.writeFile();
 
     }
 

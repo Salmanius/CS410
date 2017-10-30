@@ -1,4 +1,6 @@
 import jeigen.DenseMatrix;
+
+import javax.vecmath.Matrix3d;
 import javax.vecmath.Vector3d;
 import static jeigen.Shortcuts.*;
 import java.io.BufferedReader;
@@ -21,6 +23,7 @@ public class Driver {
     double resY; //resolution vertical
     ArrayList<mySphere> spheres;
     ArrayList<Model> models;
+    PPM ppm;
 
     public Driver(String fileName) throws IOException {
         this.fileName = fileName;
@@ -28,6 +31,10 @@ public class Driver {
         modelNames = new ArrayList<>();
         driverLines = new ArrayList<DriverLine>();
         spheres = new ArrayList<mySphere>();
+    }
+
+    public void initializePPM(String ppmFilename){
+        ppm = new PPM(ppmFilename, (int)resX, (int)resY);
     }
 
     void parse() throws IOException {
@@ -58,7 +65,7 @@ public class Driver {
                         break;
                     case "bounds":
                         bounds[0] = Double.parseDouble(split[1]);
-                        bounds[1] = Double.parseDouble(split[2]);
+                        bounds[1] = Double.parseDouble (split[2]);
                         bounds[2] = Double.parseDouble(split[3]);
                         bounds[3] = Double.parseDouble(split[4]);
                         break;
@@ -73,8 +80,6 @@ public class Driver {
                         double radius = Double.parseDouble(split[4]);
                         spheres.add(new mySphere(cx,cy,cz,radius));
                         break;
-                    default:
-                        throw new IOException("Beginning of line keyword not found");
 
                 }
             }
@@ -309,41 +314,109 @@ public class Driver {
     public void shootRays(){
         double tmax = 0;
         double tmin = 10000;
-        for (int r = 0; r < resX; r++){ //resX: horizontal resolution: number of columns: first box 2d arrays
-            for (int c = 0; c < resY; c++){ //resY: vertical resolution: number of rows: second box in 2d arrays
+        int counter0 = 0;
+        int counter1 = 0;
+        for (int r = 0; r < resX; r++) { //resX: horizontal resolution: number of columns: first box 2d arrays
+            for (int c = 0; c < resY; c++) { //resY: vertical resolution: number of rows: second box in 2d arrays
                 double t = 0;
-                Vector3d pixelPoint = findPixelPoint(r,c);
+                Vector3d pixelPoint = findPixelPoint(r, c);
                 Vector3d pixelRay = new Vector3d(pixelPoint); //not ray yet
                 pixelRay.sub(eye);
                 pixelRay.normalize();
                 //ray triangle intersection
-                for (int m = 0; m < models.size(); m++){
-                    for (int f = 0; f < models.get(m).faces.size(); f++){
-
-
+                for (int m = 0; m < models.size(); m++) {
+                    for (int f = 0; f < models.get(m).faces.size(); f++) {
+                        double tTemp = rayIntersection(models.get(m).faces.get(f), pixelPoint, pixelRay, m);
+                        //System.out.println(t);
+                        if (tTemp <= 0) {
+                            continue;
+                        }
+                        if (tTemp > tmax) {
+                            tmax = tTemp;
+                        } else if (tTemp < tmin) {
+                            tmin = tTemp;
+                        }
+                        if (t <= 0) {
+                            t = tTemp;
+                        }
+                        if (tTemp < t && tTemp > 0){
+                            t = tTemp;
+                        }
                     }
                 }
                 //ray sphere intersection
-                //
+                //same loop but with spheres
+                for (int s = 0; s < spheres.size(); s++) {
+                    double tTemp = sphereIntersection(spheres.get(s), pixelPoint, pixelRay);
+                    if (tTemp <= 0) {
+                        continue;
+                    }
+                    if (tTemp > tmax) {
+                        tmax = tTemp;
+                    } else if (tTemp < tmin) {
+                        tmin = tTemp;
+                    }
+                    if (tTemp < t && tTemp > 0){
+                        t = tTemp;
+                    }
+                }
+                if (t <= 0) {
+                    ppm.setRed(0, r, c);
+                    ppm.setGreen(0, r, c);
+                    ppm.setBlue(0, r, c);
+                }
+                else {
+                    int[] pixelRGB = calculateRGB(t, tmin, tmax);
+                    //System.out.println(Arrays.toString(pixelRGB));
+                    ppm.setRed(pixelRGB[0], r, c);
+                    ppm.setGreen(pixelRGB[1], r, c);
+                    ppm.setBlue(pixelRGB[2], r, c);
+                }
+                //System.out.println(t);
             }
         }
+        System.out.println("tmin: " + tmin);
+        System.out.println("tmax: " + tmax);
     }
 
     public double rayIntersection(Face face, Vector3d pixelPoint, Vector3d pixelRay, int mNum){
         double t = 0;
-        DenseMatrix m = new DenseMatrix(3,3);
+        //System.out.println(mNum);
+        Matrix3d m = new Matrix3d();
         Vector3d a = new Vector3d();
         Vector3d b = new Vector3d();
         Vector3d c = new Vector3d();
-        a.setX(models.get(mNum).vertices.get(face.point1).x);
-        a.setY(models.get(mNum).vertices.get(face.point1).y);
-        a.setZ(models.get(mNum).vertices.get(face.point1).z);
-        b.setX(models.get(mNum).vertices.get(face.point2).x);
-        b.setY(models.get(mNum).vertices.get(face.point2).y);
-        b.setZ(models.get(mNum).vertices.get(face.point2).z);
-        c.setX(models.get(mNum).vertices.get(face.point3).x);
-        c.setY(models.get(mNum).vertices.get(face.point3).y);
-        c.setZ(models.get(mNum).vertices.get(face.point3).z);
+        Vector3d y = new Vector3d();
+
+        //setting a,b,c
+        a.setX(models.get(mNum).vertices.get(face.point1 - 1).x);
+        a.setY(models.get(mNum).vertices.get(face.point1 - 1).y);
+        a.setZ(models.get(mNum).vertices.get(face.point1 - 1).z);
+        b.setX(models.get(mNum).vertices.get(face.point2 - 1).x);
+        b.setY(models.get(mNum).vertices.get(face.point2 - 1).y);
+        b.setZ(models.get(mNum).vertices.get(face.point2 - 1).z);
+        c.setX(models.get(mNum).vertices.get(face.point3 - 1).x);
+        c.setY(models.get(mNum).vertices.get(face.point3 - 1).y);
+        c.setZ(models.get(mNum).vertices.get(face.point3 - 1).z);
+
+
+        //setting y
+        y.setX(a.getX() - pixelPoint.getX());
+        y.setY(a.getY() - pixelPoint.getY());
+        y.setZ(a.getZ() - pixelPoint.getZ());
+
+        //setting left column
+        m.m00 = a.getX() - b.getX();
+        m.m10 = a.getY() - b.getY();
+        m.m20 = a.getZ() - b.getZ();
+        //setting middle column
+        m.m01 = a.getX() - c.getX();
+        m.m11 = a.getY() - c.getY();
+        m.m21 = a.getZ() - c.getZ();
+        //setting right column
+        m.m02 = pixelRay.getX();
+        m.m12 = pixelRay.getY();
+        m.m22 = pixelRay.getZ();
 
         //set up matrix from slide
         //cramers rule
@@ -351,8 +424,63 @@ public class Driver {
         //to get gamma: put y in the 2nd column of M  | Put left matrix determinate divided by determinate of just M
         //to get T: put y in the 3rd column of M      |
 
+        double mDet = m.determinant();
+
+        //getting beta
+        Matrix3d mBeta = new Matrix3d(m);
+        mBeta.m00 = y.getX();
+        mBeta.m10 = y.getY();
+        mBeta.m20 = y.getZ();
+        double betaDet = mBeta.determinant();
+        double beta = betaDet/mDet;
+        //early exit
+        if (beta < 0){
+            return t;
+        }
+
+        //getting gamma
+        Matrix3d mGamma = new Matrix3d(m);
+        mGamma.m01 = y.getX();
+        mGamma.m11 = y.getY();
+        mGamma.m21 = y.getZ();
+        double gammaDet = mGamma.determinant();
+        double gamma = gammaDet/mDet;
+        //early exit
+        if (gamma < 0){
+            return t;
+        }
+        if ((beta + gamma) > 1){
+            return t;
+        }
+
+        //getting T
+        Matrix3d mT = new Matrix3d(m);
+        mT.m02 = y.getX();
+        mT.m12 = y.getY();
+        mT.m22 = y.getZ();
+        double tDet = mT.determinant();
+        t = tDet/mDet;
+
         return t;
     }
+
+    double sphereIntersection(mySphere sphere, Vector3d pixelPoint, Vector3d pixelRay){
+        double t = 0;
+        Vector3d cVector = new Vector3d(); //line from pixelPoint to center of sphere
+        cVector.x = sphere.getCx() - pixelPoint.getX();
+        cVector.y = sphere.getCy() - pixelPoint.getY();
+        cVector.z = sphere.getCz() - pixelPoint.getZ();
+        double v = cVector.dot(pixelRay);
+        double cSquared = cVector.dot(cVector);
+        double dSquared = (sphere.radius)*(sphere.radius) - (cSquared-(v*v));
+        if (dSquared < 0){
+            return t;
+        }
+        double d = Math.sqrt(dSquared);
+        t = v-d;
+        return t;
+    }
+
 
     public int[] calculateRGB(double t, double tmin, double tmax){
         int[] rgb = new int[3]; //rgb
