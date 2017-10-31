@@ -8,6 +8,7 @@ public class Model {
     ArrayList<Vert> vertices;
     ArrayList<Face> faces;
     String materialFilename;
+    Material material;
     int num;
 
     public Model (String fileName){

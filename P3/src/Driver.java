@@ -21,8 +21,8 @@ public class Driver {
     double[] bounds = new double[4]; //The 'bounds' values indicate the minimum and maximum extend of the bounded image rectangle on the infinite image plane in the camera horizontal and vertical directions respectively.
     double resX; //resolution, horizontal
     double resY; //resolution vertical
-    double[] ambient = new double[3]; //ambient light
-    ArrayList<light> lights; //rbg values
+    double[] ambient = new double[3]; //ambient myLight
+    ArrayList<myLight> myLights; //rbg values
     ArrayList<mySphere> spheres;
     ArrayList<Model> models;
     PPM ppm;
@@ -81,7 +81,7 @@ public class Driver {
                         ambient[1] = Double.parseDouble(split[2]);
                         ambient[2] = Double.parseDouble(split[3]);
                         break;
-                    case "light":
+                    case "myLight":
                         double x = Double.parseDouble(split[1]);
                         double y = Double.parseDouble(split[2]);
                         double z = Double.parseDouble(split[3]);
@@ -89,7 +89,7 @@ public class Driver {
                         double red = Double.parseDouble(split[5]);
                         double green = Double.parseDouble(split[6]);
                         double blue = Double.parseDouble(split[7]);
-                        lights.add(new light(x,y,z,w,red,green,blue));
+                        myLights.add(new myLight(x,y,z,w,red,green,blue));
                     case "sphere":
                         double cx = Double.parseDouble(split[1]);
                         double cy = Double.parseDouble(split[2]);

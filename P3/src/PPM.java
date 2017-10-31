@@ -25,7 +25,14 @@ public class PPM {
         this.tmax = tmax;
     }
 
-    public void writeFile() throws IOException{
+    public void writeScene() throws IOException{
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+        writer.write(topLine);
+        writer.newLine();
+        writer.write(resX + " " + resY + " " + valueRange);
+    }
+
+    public void writeDepthMap() throws IOException{
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
         writer.write(topLine);
         writer.newLine();
