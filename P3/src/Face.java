@@ -5,9 +5,16 @@ public class Face {
     int point1 = 1;
     int point2 = 1;
     int point3 = 1;
+    int materialIndex = 0;
 
     public Face(String raw){
         this.raw = raw;
+        parse();
+    }
+
+    public Face(String raw, int index){
+        this.raw = raw;
+        this.materialIndex = index;
         parse();
     }
 

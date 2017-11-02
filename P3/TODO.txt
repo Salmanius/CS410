@@ -1,0 +1,13 @@
+1.By default: if there is no material specified at the beginning of the .obj ("mtllib MTLFILENAME"), there are no materials used
+2.By default: if there is no "usemtl MATERIALNAME" in the .obj faces section, all faces use the first material  of the materials file.
+3.Parse the materials file as soon as it is found so it can be referenced later
+4.Do not trust the material number comment made by blender in the mtl file.
+5.Read in all materials in an arraylist for use.
+6.Default is first material, current is set as default at first, but can be changed later.
+7.Current is changed for faces by "usemtl MATERNAME" and so all faces after it will use that until set again
+8."usemtl MATERIALNAME" uses it's own line
+9.Faces should store an index from the materials list and a materials name for use later and human readable name
+10.Break on new material in the mtl file based on after keyword "illum" or when hitting keyword "newmtl"
+11.Set default phong value (aka "Ns") to 16
+12.ignore Ni and d values for the time being
+13.Save Ke values but arent used right now.

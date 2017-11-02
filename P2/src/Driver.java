@@ -128,9 +128,10 @@ public class Driver {
         double tmax = 0;
         double tmin = 10000;
         tmatrix = new double[(int)resY][(int)resX];
-        for (int r = 0; r < resY; r++) { //resX: horizontal resolution: number of columns: first box 2d arrays
-            for (int c = 0; c < resX; c++) { //resY: vertical resolution: number of rows: second box in 2d arrays
+        for (int r = 0; r < resY; r++) {
+            for (int c = 0; c < resX; c++) {
                 double t = 0;
+                Boolean firstTime = true;
                 Vector3d pixelPoint = findPixelPoint(c, r);
                 Vector3d pixelRay = new Vector3d(pixelPoint); //not ray yet
                 pixelRay.sub(eye);
@@ -146,10 +147,11 @@ public class Driver {
                         if (tTemp < tmin) {
                             tmin = tTemp;
                         }
-                        if (t <= 0) {
+                        if (firstTime) {
+                            firstTime = false;
                             t = tTemp;
                         }
-                        if (tTemp < t && tTemp > 0){
+                        if (tTemp <= t && tTemp > 0){
                             t = tTemp;
                         }
                     }
@@ -164,10 +166,11 @@ public class Driver {
                     if (tTemp < tmin) {
                         tmin = tTemp;
                     }
-                    if (t <= 0) {
+                    if (firstTime) {
+                        firstTime = false;
                         t = tTemp;
                     }
-                    if (tTemp < t && tTemp > 0){
+                    if (tTemp <= t && tTemp > 0){
                         t = tTemp;
                     }
                 }
@@ -257,7 +260,7 @@ public class Driver {
         if (gamma < 0){
             return t;
         }
-        if ((beta + gamma) > 1){
+        if ((beta + gamma) > 1.001){
             return t;
         }
 

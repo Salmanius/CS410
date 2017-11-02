@@ -13,5 +13,4 @@ public class Main {
         driver.shootRays();
         driver.ppm.writeFile();
     }
-
 }
