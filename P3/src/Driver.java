@@ -186,7 +186,8 @@ public class Driver {
                     if (tTemp <= t && tTemp > 0){
                         t = tTemp;
                         hitPoint = calculateHitPoint(t, pixelPoint, pixelRay);
-                        surfaceNormal = calculateSphereSurfaceNormal(hitPoint, spheres.get(s));
+                        Vector3d hitPointCopy = new Vector3d(hitPoint);
+                        surfaceNormal = calculateSphereSurfaceNormal(hitPointCopy, spheres.get(s));
                         material = new Material(spheres.get(s).material);
                     }
                 }
@@ -217,35 +218,32 @@ public class Driver {
 
 
 
-
-
-
-    public Vector3d colorifizer(Vector3d surfaceNormal, Vector3d hitPoint, Material material, Vector3d pixelPoint){
-
+    public Vector3d colorifizer(Vector3d surfaceNormal, Vector3d Q, Material material, Vector3d pixelPoint){
         surfaceNormal.normalize();
         //ambient
         Vector3d color = new Vector3d(ambient);
         color = pairwiseProduct(color,material.Ka);
-
+        //System.out.println("ambient pairwise: " + color);
         Vector3d diffuse = new Vector3d(0,0,0);
         Vector3d specular = new Vector3d(0,0,0);
         //specular and diffuse
         for (int i = 0; i < myLights.size(); i++){
             //diffuse
-            Vector3d QL = new Vector3d(myLights.get(i).getX(), myLights.get(i).getY(), myLights.get(i).getZ()); //aka QL
-            QL.sub(hitPoint);
+            Vector3d light = new Vector3d(myLights.get(i).getX(),myLights.get(i).getY(),myLights.get(i).getZ());
+            Vector3d QL = new Vector3d();
+            QL.sub(light,Q);
             QL.normalize();
-            //System.out.println("QL:" + lightHitDiff);
-            surfaceNormal.normalize();
             double diffuseCheck = surfaceNormal.dot(QL);
             if (diffuseCheck > 0){
-                Vector3d tempDiffuse = pairwiseProduct(myLights.get(i).rgb,material.Kd);
+                Vector3d lightRGB = new Vector3d(myLights.get(i).rgb);
+                Vector3d tempDiffuse = pairwiseProduct(lightRGB,material.Kd);
+                //System.out.println("diffuse pairwise:" + tempDiffuse);
                 tempDiffuse.scale(diffuseCheck);
                 diffuse.add(tempDiffuse);
             }
             //specular
             Vector3d QE = new Vector3d(pixelPoint.getX(),pixelPoint.getY(),pixelPoint.getZ()); //aka QE
-            QE.sub(hitPoint);
+            QE.sub(Q);
             QE.normalize();
             //System.out.println("QE:" + hitToPix);
             Vector3d P = new Vector3d(surfaceNormal);//point along the light exit ray
@@ -255,12 +253,13 @@ public class Driver {
             double specularCheck = P.dot(QE);
             if (specularCheck >= 0) {
                 Vector3d tempSpecular = pairwiseProduct(myLights.get(i).rgb,material.Ks);
+                //System.out.println("specular pairwise:" + tempSpecular);
                 double specularScale = Math.pow(specularCheck,material.phong);
                 tempSpecular.scale(specularScale);
                 specular.add(tempSpecular);
             }
 //            System.out.println("SurfaceNormal" + surfaceNormal);
-//            System.out.println("QE:" + QE);
+           //System.out.println(Q +  "     " + QL);
 //            System.out.println("QL:" + QL);
 //            System.out.println("P:" + P);
 //            System.out.println("diffuse:" + diffuse);
@@ -310,7 +309,6 @@ public class Driver {
     Vector3d calculateSphereSurfaceNormal(Vector3d Q, mySphere sphere){
         Vector3d sphereCenter = new Vector3d(sphere.cx,sphere.cy,sphere.cz);
         Q.sub(sphereCenter);
-        Q.normalize();
         return Q;
     }
 
