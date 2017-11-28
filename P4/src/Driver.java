@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class Driver {
     String fileName;
@@ -27,6 +28,7 @@ public class Driver {
     ArrayList<mySphere> spheres;
     ArrayList<Model> models;
     PPM ppm;
+    int recursionLevel;
     double[][] tmatrix;
     double[][][] rgbMatrix;
 
@@ -80,6 +82,9 @@ public class Driver {
                         resX = Double.parseDouble(split[1]);
                         resY = Double.parseDouble(split[2]);
                         break;
+                    case "recursionLevel":
+                        recursionLevel = Integer.parseInt(split[1]);
+                        break;
                     case "ambient":
                         ambient.setX(Double.parseDouble(split[1]));
                         ambient.setY(Double.parseDouble(split[2]));
@@ -127,7 +132,6 @@ public class Driver {
     }
 
 
-
     public void shootRays(){
         double tmax = 0;
         double tmin = 10000;
@@ -165,6 +169,7 @@ public class Driver {
                             surfaceNormal = calculateFaceSurfaceNormal(models.get(m).faces.get(f),m);
                             int materialIndex = models.get(m).faces.get(f).materialIndex;
                             material = models.get(m).materials.get(materialIndex);
+                            //System.out.println(material.Kd);
                         }
 
                     }
@@ -216,6 +221,23 @@ public class Driver {
         ppm.giveRGB(rgbMatrix);
     }
 
+    public boolean shadowCheck(Vector3d QL,Vector3d Q){
+        Vector3d QLcopy = new Vector3d(QL);
+        Vector3d Qcopy = new Vector3d(Q);
+        for (int m = 0; m < models.size(); m++){
+            for (int f = 0; f < models.get(m).faces.size(); f++){
+                if(triangleIntersection(models.get(m).faces.get(f), Qcopy, QLcopy, m) > 0.0001){
+                    return true;
+                }
+            }
+        }
+        for (int s = 0; s < spheres.size(); s++){
+            if (sphereIntersection(spheres.get(s), Qcopy, QLcopy) > 0.0001){
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     public Vector3d colorifizer(Vector3d surfaceNormal, Vector3d Q, Material material, Vector3d pixelPoint){
@@ -233,6 +255,9 @@ public class Driver {
             Vector3d QL = new Vector3d();
             QL.sub(light,Q);
             QL.normalize();
+            if (shadowCheck(QL,Q)){
+                continue;
+            }
             double diffuseCheck = surfaceNormal.dot(QL);
             if (diffuseCheck > 0){
                 Vector3d lightRGB = new Vector3d(myLights.get(i).rgb);
