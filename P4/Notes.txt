@@ -1,4 +1,0 @@
-1. Check shadows AFTER ambient BEFORE DIF/SPEC, use dif check for shadow
-2. colorize, then check depth
-//depth = 1 means 1 recur bounce
-3. attenuation 

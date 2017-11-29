@@ -28,8 +28,7 @@ public class Driver {
     ArrayList<mySphere> spheres;
     ArrayList<Model> models;
     PPM ppm;
-    int recursionLevel;
-    double[][] tmatrix;
+    int recursionLevel = 0;
     double[][][] rgbMatrix;
 
     public Driver(String fileName) throws IOException {
@@ -133,82 +132,18 @@ public class Driver {
 
 
     public void shootRays(){
-        double tmax = 0;
-        double tmin = 10000;
-        tmatrix = new double[(int)resY][(int)resX];
+//        double tmax = 0;
+//        double tmin = 10000;
         rgbMatrix = new double[(int)resY][(int)resX][3];
-        Vector3d surfaceNormal = new Vector3d();
-        Vector3d hitPoint = new Vector3d();
-        Material material = new Material();
         for (int r = 0; r < resY; r++) { //resX: horizontal resolution: number of columns: first box 2d arrays
             for (int c = 0; c < resX; c++) { //resY: vertical resolution: number of rows: second box in 2d arrays
-                double t = 0;
-                Boolean firstTime = true;
                 Vector3d pixelPoint = findPixelPoint(c, r);
                 Vector3d pixelRay = new Vector3d(pixelPoint); //not ray yet
                 pixelRay.sub(eye);
                 pixelRay.normalize();
-                //ray triangle intersection
-                for (int m = 0; m < models.size(); m++) {
-                    for (int f = 0; f < models.get(m).faces.size(); f++) {
-                        double tTemp = triangleIntersection(models.get(m).faces.get(f), pixelPoint, pixelRay, m);
-                        //System.out.println(t);
-                        if (tTemp <= 0) {
-                            continue;
-                        }
-                        if (tTemp < tmin) {
-                            tmin = tTemp;
-                        }
-                        if (firstTime) {
-                            firstTime = false;
-                            t = tTemp;
-                        }
-                        if (tTemp <= t && tTemp > 0){
-                            t = tTemp;
-                            hitPoint = calculateHitPoint(t, pixelPoint, pixelRay);
-                            surfaceNormal = calculateFaceSurfaceNormal(models.get(m).faces.get(f),m);
-                            int materialIndex = models.get(m).faces.get(f).materialIndex;
-                            material = models.get(m).materials.get(materialIndex);
-                            //System.out.println(material.Kd);
-                        }
-
-                    }
-                }
-                //ray sphere intersection
-                //same loop but with spheres
-                for (int s = 0; s < spheres.size(); s++) {
-                    double tTemp = sphereIntersection(spheres.get(s), pixelPoint, pixelRay);
-                    if (tTemp <= 0) {
-                        continue;
-                    }
-                    if (tTemp < tmin) {
-                        tmin = tTemp;
-                    }
-                    if (firstTime) {
-                        firstTime = false;
-                        t = tTemp;
-                    }
-                    if (tTemp <= t && tTemp > 0){
-                        t = tTemp;
-                        hitPoint = calculateHitPoint(t, pixelPoint, pixelRay);
-                        Vector3d hitPointCopy = new Vector3d(hitPoint);
-                        surfaceNormal = calculateSphereSurfaceNormal(hitPointCopy, spheres.get(s));
-                        material = new Material(spheres.get(s).material);
-                    }
-                }
-                if (t > tmax) {
-                    tmax = t;
-                }
-                tmatrix[r][c] = t;
-                Vector3d color = new Vector3d();
-                if (t == 0){
-                    color.setX(0);
-                    color.setY(0);
-                    color.setZ(0);
-                }
-                else {
-                    color = colorifizer(surfaceNormal, hitPoint, material, pixelPoint);
-                }
+                Vector3d refatt = new Vector3d(1,1,1); //reflection attenuation
+                Vector3d accumulator = new Vector3d(0,0,0);
+                Vector3d color = castRay(pixelPoint, pixelRay, accumulator, refatt, recursionLevel);
                 //System.out.println(color);
                 rgbMatrix[r][c][0] = color.getX();
                 rgbMatrix[r][c][1] = color.getY();
@@ -219,6 +154,90 @@ public class Driver {
         //System.out.println("tmax: " + tmax);
         //ppm.giveT(tmatrix,tmin,tmax);
         ppm.giveRGB(rgbMatrix);
+    }
+
+    public Vector3d castRay(Vector3d pixelPoint, Vector3d pixelRay, Vector3d accumulator, Vector3d refatt, int level){
+        double t = 0;
+        double tmin = 0;
+        Boolean firstTime = true;
+        Vector3d surfaceNormal = new Vector3d();
+        Vector3d hitPoint = new Vector3d();
+        Material material = new Material();
+        //ray triangle intersection
+        for (int m = 0; m < models.size(); m++) {
+            for (int f = 0; f < models.get(m).faces.size(); f++) {
+                double tTemp = triangleIntersection(models.get(m).faces.get(f), pixelPoint, pixelRay, m);
+                //System.out.println(t);
+                if (tTemp <= 0.0001) {
+                    continue;
+                }
+                if (tTemp < tmin) {
+                    tmin = tTemp;
+                }
+                if (firstTime) {
+                    firstTime = false;
+                    t = tTemp;
+                }
+                if (tTemp <= t && tTemp > 0){
+                    t = tTemp;
+                    hitPoint = calculateHitPoint(t, pixelPoint, pixelRay);
+                    surfaceNormal = calculateFaceSurfaceNormal(models.get(m).faces.get(f),m);
+                    int materialIndex = models.get(m).faces.get(f).materialIndex;
+                    material = models.get(m).materials.get(materialIndex);
+                    //System.out.println(material.Kd);
+                }
+
+            }
+        }
+        //ray sphere intersection
+        //same loop but with spheres
+        for (int s = 0; s < spheres.size(); s++) {
+            double tTemp = sphereIntersection(spheres.get(s), pixelPoint, pixelRay);
+            if (tTemp <= 0.0001) {
+                continue;
+            }
+            if (tTemp < tmin) {
+                tmin = tTemp;
+            }
+            if (firstTime) {
+                firstTime = false;
+                t = tTemp;
+            }
+            if (tTemp <= t && tTemp > 0) {
+                t = tTemp;
+                hitPoint = calculateHitPoint(t, pixelPoint, pixelRay);
+                Vector3d hitPointCopy = new Vector3d(hitPoint);
+                surfaceNormal = calculateSphereSurfaceNormal(hitPointCopy, spheres.get(s));
+                surfaceNormal.normalize();
+                material = new Material(spheres.get(s).material);
+            }
+        }
+        Vector3d color = new Vector3d();
+        if (t == 0){
+            color.setX(0);
+            color.setY(0);
+            color.setZ(0);
+            return accumulator;
+        }
+        else {
+            color = colorifizer(surfaceNormal, hitPoint, material, pixelPoint);
+        }
+        Vector3d tempAcc = new Vector3d();
+        tempAcc = pairwiseProduct(refatt,color);
+        tempAcc.scale((1.0 - material.reflectivity));
+        accumulator.add(tempAcc);
+        if (level > 0){
+            pixelRay.scale(-1);
+            pixelRay.normalize();
+            Vector3d refR = new Vector3d(surfaceNormal); //reflection ray
+            double refRNum = surfaceNormal.dot(pixelRay);
+            refRNum = refRNum * 2;
+            refR.scale(refRNum);
+            refR.sub(pixelRay);
+            refR.normalize();
+            accumulator = castRay(hitPoint, refR, accumulator, pairwiseProduct(material.Kr,refatt), (level-1));
+        }
+        return accumulator;
     }
 
     public boolean shadowCheck(Vector3d QL,Vector3d Q){

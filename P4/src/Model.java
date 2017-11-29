@@ -118,6 +118,7 @@ public class Model {
                             double blue = Double.parseDouble(split[3]);
                             Ks = new Vector3d(red, green, blue);
                         }
+
                     }
                 }
             }
