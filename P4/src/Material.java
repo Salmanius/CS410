@@ -17,6 +17,13 @@ public class Material {
         this.Ks = new Vector3d(ks);
     }
 
+    public Material(Vector3d ka, Vector3d kd, Vector3d ks, Vector3d kr){
+        this.Ka = new Vector3d(ka);
+        this.Kd = new Vector3d(kd);
+        this.Ks = new Vector3d(ks);
+        this.Kr = new Vector3d(kr);
+    }
+
     public Material(Material copy){
         this.name = copy.name;
         this.reflectivity = copy.reflectivity;
@@ -24,6 +31,7 @@ public class Material {
         this.Ka = new Vector3d(copy.Ka);
         this.Kd = new Vector3d(copy.Kd);
         this.Ks = new Vector3d(copy.Ks);
+        this.Kr = new Vector3d(copy.Kr);
     }
 
     public Material(){}

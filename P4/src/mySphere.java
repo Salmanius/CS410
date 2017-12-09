@@ -1,4 +1,5 @@
 import javax.vecmath.Vector3d;
+import java.util.Vector;
 
 public class mySphere {
     double cx;
@@ -7,6 +8,13 @@ public class mySphere {
     double radius;
     Material material;
 
+    public mySphere(double cx, double cy, double cz, double radius, Vector3d ka, Vector3d kd, Vector3d ks, Vector3d att){
+        this.cx = cx;
+        this.cy = cy;
+        this.cz = cz;
+        this.radius = radius;
+        this.material = new Material(ka,kd,ks,att);
+    }
 
     public mySphere(double cx, double cy, double cz, double radius, Vector3d ka, Vector3d kd, Vector3d ks){
         this.cx = cx;
@@ -15,8 +23,6 @@ public class mySphere {
         this.radius = radius;
         this.material = new Material(ka,kd,ks);
     }
-
-
 
     public double getCx() {
         return cx;

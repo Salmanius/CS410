@@ -1,5 +1,3 @@
-import com.sun.org.apache.xpath.internal.SourceTree;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import jeigen.DenseMatrix;
 
 import javax.vecmath.Matrix3d;
@@ -10,7 +8,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Vector;
+import java.util.Date;
+
 
 public class Driver {
     String fileName;
@@ -120,7 +119,17 @@ public class Driver {
                         double ks_blue = Double.parseDouble(split[13]);
                         Vector3d ks = new Vector3d(ks_red, ks_green, ks_blue);
 
-                        spheres.add(new mySphere(cx,cy,cz,radius,ka,kd,ks));
+                        if (split.length > 13){
+                            double att1 = Double.parseDouble(split[14]);
+                            double att2 = Double.parseDouble(split[15]);
+                            double att3 = Double.parseDouble(split[16]);
+                            Vector3d att = new Vector3d(att1,att2,att3);
+                            spheres.add(new mySphere(cx,cy,cz,radius,ka,kd,ks,att));
+                        }
+                        else {
+                            spheres.add(new mySphere(cx,cy,cz,radius,ka,kd,ks));
+                        }
+
                         break;
 
                 }
@@ -130,10 +139,32 @@ public class Driver {
         }
     }
 
+    public static void progressPercentage(int remain, int total) {
+        if (remain > total) {
+            throw new IllegalArgumentException();
+        }
+        int maxBareSize = 10; // 10unit for 100%
+        int remainProcent = ((100 * remain) / total) / maxBareSize;
+        char defaultChar = '-';
+        String icon = "*";
+        String bare = new String(new char[maxBareSize]).replace('\0', defaultChar) + "]";
+        StringBuilder bareDone = new StringBuilder();
+        bareDone.append("[");
+        for (int i = 0; i < remainProcent; i++) {
+            bareDone.append(icon);
+        }
+        String bareRemain = bare.substring(remainProcent, bare.length());
+        System.out.print("\r" + bareDone + bareRemain + " " + remainProcent * 10 + "%");
+        if (remain == total) {
+            System.out.print("\n");
+        }
+    }
 
     public void shootRays(){
 //        double tmax = 0;
 //        double tmin = 10000;
+        int counter = 0;
+        int max = (int) (resY*resX);
         rgbMatrix = new double[(int)resY][(int)resX][3];
         for (int r = 0; r < resY; r++) { //resX: horizontal resolution: number of columns: first box 2d arrays
             for (int c = 0; c < resX; c++) { //resY: vertical resolution: number of rows: second box in 2d arrays
@@ -144,11 +175,12 @@ public class Driver {
                 Vector3d refatt = new Vector3d(1,1,1); //reflection attenuation
                 Vector3d accumulator = new Vector3d(0,0,0);
                 Vector3d color = castRay(pixelPoint, pixelRay, accumulator, refatt, recursionLevel);
-                //System.out.println(color);
                 rgbMatrix[r][c][0] = color.getX();
                 rgbMatrix[r][c][1] = color.getY();
                 rgbMatrix[r][c][2] = color.getZ();
+                counter++;
             }
+            progressPercentage(counter,max);
         }
         //System.out.println("\ntmin: " + tmin);
         //System.out.println("tmax: " + tmax);
@@ -213,6 +245,10 @@ public class Driver {
             }
         }
         Vector3d color = new Vector3d();
+        if(surfaceNormal.dot(pixelRay) > 0.0)
+        {
+            surfaceNormal.scale(-1);
+        }
         if (t == 0){
             color.setX(0);
             color.setY(0);
@@ -237,6 +273,7 @@ public class Driver {
             refR.normalize();
             accumulator = castRay(hitPoint, refR, accumulator, pairwiseProduct(material.Kr,refatt), (level-1));
         }
+        //check depth > 0, if sum ko < 3, refraction code
         return accumulator;
     }
 

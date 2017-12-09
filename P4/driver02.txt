@@ -1,0 +1,14 @@
+eye 150 150 150
+look 0 0 0
+up 0 1 0
+d 200
+bounds -2 -2 2 2
+res 2048 2048
+recursionLevel 5
+ambient 0.1 0.1 0.1
+light 200 100 -200 1 0.5 0.5 0.5
+light -200 100 200 1 0.5 0.5 0.5
+model 1.0 0.0 0.0 90 3 0 0 0 floor.obj
+model 1.0 0.0 0.0 -90 0.001 0 0 0 wolf.obj
+model 1.0 0.0 0.0 -90 0.001 0 1 0 eagle.obj
+

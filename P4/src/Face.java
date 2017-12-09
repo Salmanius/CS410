@@ -26,13 +26,46 @@ public class Face {
         this.materialIndex = copy.materialIndex;
     }
 
-    void parse(){ //BAD CODE, NEEDS TRUE PARSING LATER
+    void parse(){
         String[] spaceSplit = raw.split(" ");
+//        if (raw.contains("//")){
+//            String[] point1Raw = spaceSplit[0].split("//");
+//            point1 = Integer.parseInt(point1Raw[0]);
+//            String[] point2Raw = spaceSplit[1].split("//");
+//            point2Raw = spaceSplit[1].split("/");
+//            String[] point3Raw = spaceSplit[2].split("//");
+//            point3 = Integer.parseInt(point3Raw[0]);
+//        }
+//        else if (raw.contains("/")){
+//            String[] point1Raw = spaceSplit[0].split("/");
+//            point1 = Integer.parseInt(point1Raw[0]);
+//            String[] point2Raw = spaceSplit[1].split("/");
+//            point2 = Integer.parseInt(point2Raw[0]);
+//            String[] point3Raw = spaceSplit[2].split("/");
+//            point3 = Integer.parseInt(point3Raw[0]);
+//        }
+//        else {
+//            point1 = Integer.parseInt(spaceSplit[1]);
+//            point2 = Integer.parseInt(spaceSplit[2]);
+//            point3 = Integer.parseInt(spaceSplit[3]);
+//        }
+//        point1 = Integer.parseInt(spaceSplit[1]);
+//        point2 = Integer.parseInt(spaceSplit[2]);
+//        point3 = Integer.parseInt(spaceSplit[3]);
         String[] point1Raw = spaceSplit[0].split("//");
+        if (point1Raw.length == 1){
+            point1Raw = spaceSplit[0].split("/");
+        }
         point1 = Integer.parseInt(point1Raw[0]);
         String[] point2Raw = spaceSplit[1].split("//");
+        if (point2Raw.length == 1){
+            point2Raw = spaceSplit[1].split("/");
+        }
         point2 = Integer.parseInt(point2Raw[0]);
         String[] point3Raw = spaceSplit[2].split("//");
+        if (point3Raw.length == 1){
+            point3Raw = spaceSplit[1].split("/");
+        }
         point3 = Integer.parseInt(point3Raw[0]);
     }
 }
